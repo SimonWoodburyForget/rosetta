@@ -20,7 +20,7 @@ sequence generation algorithms, such that we can automate the process
 of benchmarking them, then we can use `benches/main.rs` which uses
 `criterion` to do all the heavy lifting, all we need to do is pipe the
 data into the algorithms and set sufficiently long runtimes to gather
-accurate results.
+accurate results; running the benchmark current takes around 2 hours.
 
 ![ones](charts/ones.svg)
 
