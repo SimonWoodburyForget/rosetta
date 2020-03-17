@@ -1,17 +1,4 @@
-[package]
-name = "rosetta-sorting-performance"
-version = "0.1.0"
-authors = ["Simon <simonwoodburyforget@gmail.com>"]
-edition = "2018"
-
-[dependencies]
-criterion = "0.3"
-rand = "0.7"
-
-[dependencies.the_algorithms_rust]
-git = "https://github.com/TheAlgorithms/Rust"
-version = "0.1.0"
-
-[[bench]]
-name = "main"
-harness = false
+[workspace]
+members = [
+  "sorting"
+]

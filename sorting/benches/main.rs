@@ -1,5 +1,5 @@
 use criterion::*;
-use rosetta_sorting_performance::*;
+use sorting::*;
 use std::time::Duration;
 
 fn sort_bench(c: &mut Criterion) {
@@ -8,7 +8,7 @@ fn sort_bench(c: &mut Criterion) {
         let mut g = c.benchmark_group(input.name);
         g.plot_config(config);
         for sorter in sorting_algos() {
-            for i in (1..=32_u32).map(|x| x * 32) {
+            for i in (1..=15_u32).map(|x| 2_u32.pow(x)) {
                 g.throughput(Throughput::Elements(i as u64));
                 g.warm_up_time(Duration::from_millis((i * 2 + 10) as u64));
                 g.measurement_time(Duration::from_millis((i * 24 + 20) as u64));
