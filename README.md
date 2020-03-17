@@ -17,6 +17,5 @@ Libraries used:
 
 `src/lib.rs` defines the basic wrappers around the sorting and
 sequence generation algorithms, such that we can automate the process
-of benchmarking them; we don't actually re-implement any sorting
-functions, and then we can use `benchs/main.rs` which uses `criterion`
-to do all the heavy lifting.
+of benchmarking them; then we can use `benchs/main.rs` which uses
+`criterion` to do all the heavy lifting. 
