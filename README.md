@@ -19,3 +19,11 @@ Libraries used:
 sequence generation algorithms, such that we can automate the process
 of benchmarking them; then we can use `benchs/main.rs` which uses
 `criterion` to do all the heavy lifting. 
+
+![ones](charts/ones.svg)
+
+![reverse-range](charts/rev-range.svg)
+
+![shuffle-range](charts/shuffle-range.svg)
+
+![sorted-range](charts/sorted-range.svg)
