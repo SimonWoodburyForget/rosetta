@@ -1,7 +1,8 @@
 use rand::prelude::*;
 
 /// Room is a (potentially) shuffled range of values (boxes).
-struct Room {
+#[derive(Debug)]
+pub struct Room {
     boxes: Vec<usize>,
 }
 
@@ -32,7 +33,7 @@ impl Room {
 
     /// Returns an iterator which follows indices.
     pub fn index_walker(&self, state: usize) -> IndexWalker<'_> {
-        IndexWalker { boxes: self, state }
+        IndexWalker::new(self.get(state), &self)
     }
 
     /// Returns an iterator over the room which just iterates
@@ -44,12 +45,29 @@ impl Room {
             .cycle()
             .map(|&x| x)
     }
+
+    /// Whether this room can be solved in max steps.
+    pub fn prisoner_solved(&self, state: usize, max: usize) -> bool {
+        self.index_walker(state).take(max).any(|y| y == state)
+    }
+
+    /// Whether this room can be solved by walking through `max`
+    /// inline boxes.
+    pub fn linear_solved(&self, state: usize, max: usize) -> bool {
+        self.linear_walker(state).take(max).any(|y| y == state)
+    }
 }
 
 /// An iterator over the room as defined by the 100-prisoners solution.
 pub struct IndexWalker<'a> {
     boxes: &'a Room,
     state: usize,
+}
+
+impl IndexWalker<'_> {
+    fn new(state: usize, boxes: &Room) -> IndexWalker<'_> {
+        IndexWalker { boxes, state }
+    }
 }
 
 impl Iterator for IndexWalker<'_> {
@@ -70,7 +88,6 @@ fn index_walker() {
 
     let room = Room::shifted(3, 1);
     let mut w = room.index_walker(0);
-    assert_eq!(w.next(), Some(0));
     assert_eq!(w.next(), Some(1));
     assert_eq!(w.next(), Some(2));
     assert_eq!(w.next(), Some(0));
@@ -99,4 +116,24 @@ fn linear_walker() {
     assert_eq!(w.next(), Some(0));
     assert_eq!(w.next(), Some(1));
     assert_eq!(w.next(), Some(2));
+}
+
+#[test]
+fn solvable_rooms() {
+    let room = Room::shifted(10, 1);
+    println!("{:?}", room);
+    assert!(!room.prisoner_solved(0, 1));
+    assert!(!room.prisoner_solved(0, 9));
+    assert!(room.prisoner_solved(0, 10));
+}
+
+#[test]
+fn linear_solvables() {
+    let room = Room::shifted(10, 1);
+    println!("{:?}", room);
+
+    assert!(!room.linear_solved(0, 5));
+    assert!(room.linear_solved(5, 5));
+    assert!(!room.linear_solved(6, 5));
+    assert!(room.linear_solved(0, 10));
 }
