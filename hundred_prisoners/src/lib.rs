@@ -65,22 +65,28 @@ impl Room {
 }
 
 pub fn attempter(boxes: usize, peeks: usize, attempts: usize) -> usize {
-    let threads = 6;
+    let threads = if attempts > 10 { 6 } else { 1 };
     let attempts = attempts / threads;
     let is_one = |t| if t { 1 } else { 0 };
-    (0..threads)
-        .into_par_iter()
-        .map(|_| {
-            let mut room = Room::new(boxes);
-            (0..attempts)
-                .map(|_| {
-                    room.shuffle();
+
+    let solver = |_| {
+        let mut room = Room::new(boxes);
+        (0..attempts)
+            .map(|_| {
+                room.shuffle();
+                if boxes > 1000 {
+                    (0..boxes)
+                        .into_par_iter()
+                        .all(|i| room.prisoner_solved(i, peeks))
+                } else {
                     (0..boxes).all(|i| room.prisoner_solved(i, peeks))
-                })
-                .map(is_one)
-                .sum::<usize>()
-        })
-        .sum()
+                }
+            })
+            .map(is_one)
+            .sum::<usize>()
+    };
+
+    (0..threads).into_par_iter().map(solver).sum()
 }
 
 /// Checks whether the optimized attempter is within 30%,
