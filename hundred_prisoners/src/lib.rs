@@ -1,4 +1,5 @@
 use rand::prelude::*;
+use rayon::prelude::*;
 
 /// Room is a (potentially) shuffled range of values (boxes).
 #[derive(Debug, Clone)]
@@ -61,6 +62,35 @@ impl Room {
     pub fn linear_solved(&self, state: usize, max: usize) -> bool {
         self.linear_walker(state).take(max).any(|y| y == state)
     }
+}
+
+pub fn attempter(boxes: usize, peeks: usize, attempts: usize) -> usize {
+    let threads = 6;
+    let attempts = attempts / threads;
+    let is_one = |t| if t { 1 } else { 0 };
+    (0..threads)
+        .into_par_iter()
+        .map(|_| {
+            let mut room = Room::new(boxes);
+            (0..attempts)
+                .map(|_| {
+                    room.shuffle();
+                    (0..boxes).all(|i| room.prisoner_solved(i, peeks))
+                })
+                .map(is_one)
+                .sum::<usize>()
+        })
+        .sum()
+}
+
+/// Checks whether the optimized attempter is within 30%,
+/// which may potentially randomly fail.
+#[test]
+fn attempt_tester() {
+    let att = 1_000;
+    let res = attempter(100, 50, att);
+    assert!((att / 4) < res);
+    assert!((att / 2) > res);
 }
 
 #[test]
