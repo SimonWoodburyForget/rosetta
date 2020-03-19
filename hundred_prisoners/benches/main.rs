@@ -56,7 +56,7 @@ fn room_bench(c: &mut Criterion) {
 
 fn attempt_bench(c: &mut Criterion) {
     let mut g = c.benchmark_group("attempter");
-    // g.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
+    g.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
     for max in (1..8).map(|x| 2_usize.pow(x) * 10) {
         g.throughput(Throughput::Elements(max as u64));
 
@@ -65,6 +65,9 @@ fn attempt_bench(c: &mut Criterion) {
 
         let id = BenchmarkId::new("prison-solver-attempt-size", max);
         g.bench_with_input(id, &max, |b, &max| b.iter(|| attempter(100, 50, max)));
+
+        let id = BenchmarkId::new("prison-solver-attempt+input-size", max);
+        g.bench_with_input(id, &max, |b, &max| b.iter(|| attempter(max, max / 2, max)));
     }
 }
 

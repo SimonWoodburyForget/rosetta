@@ -64,9 +64,13 @@ impl Room {
     }
 }
 
+/// Generate statistical probability of solution. As a result of this problem
+/// being easy to run in parallel, I implemented threading on a best effort basis.
 pub fn attempter(boxes: usize, peeks: usize, attempts: usize) -> usize {
-    let threads = if attempts > 10 { 6 } else { 1 };
-    let attempts = attempts / threads;
+    // work is split into 16 for no specific reason, other then it worked
+    // better then splitting it exactly by the number of logical CPUs.
+    let threads = if attempts >= 16 { 16 } else { 1 };
+    let attempts = (attempts / threads) + attempts % 16;
     let is_one = |t| if t { 1 } else { 0 };
 
     let solver = |_| {
@@ -74,7 +78,8 @@ pub fn attempter(boxes: usize, peeks: usize, attempts: usize) -> usize {
         (0..attempts)
             .map(|_| {
                 room.shuffle();
-                if boxes > 1000 {
+                // thread boxes if boxes is high but attempt count is low
+                if boxes > 1000 && attempts < 16 {
                     (0..boxes)
                         .into_par_iter()
                         .all(|i| room.prisoner_solved(i, peeks))
