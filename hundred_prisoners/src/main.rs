@@ -8,25 +8,13 @@ fn main() {
     let threads = 6;
     let is_one = |t| if t { 1 } else { 0 };
 
-    let avg = (0_u64..threads)
-        .into_par_iter()
-        .map(|_| {
-            let mut room = Room::new(boxes);
-            (0..attempts)
-                .map(|_| {
-                    room.shuffle();
-                    (0..boxes).all(|i| room.prisoner_solved(i, peeks))
-                })
-                .map(is_one)
-                .sum::<u64>()
-        })
-        .sum::<u64>();
+    let count = attempter(boxes, peeks, attempts);
 
     println!(
         "prison-solver {}/{} {:.5}",
-        avg,
+        count,
         attempts * threads,
-        avg as f64 / (attempts * threads) as f64
+        count as f64 / (attempts * threads) as f64
     );
 
     let avg = (0_u64..threads)
