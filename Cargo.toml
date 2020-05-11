@@ -3,5 +3,6 @@ members = [
   "sorting",
   "hundred_prisoners",
   "parallel_brute_force",
-  "reverse_a_string"
+  "reverse_a_string",
+  "list_comprehensions"
 ]

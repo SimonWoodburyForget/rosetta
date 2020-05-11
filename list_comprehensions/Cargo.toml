@@ -1,0 +1,4 @@
+[package]
+name = "comprehensions"
+version = "0.0.1"
+authors = [ "simon <simonwoodburyforget@gmail.com>" ]
