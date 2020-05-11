@@ -11,11 +11,16 @@
 /// which is just a short-hand for `.map().flatten()`, and then
 /// we can use `Option` as an iterator, in `flap_map` which both
 /// builds the triplet `[x, y, z]` and then filters it.
+#[inline]
 pub fn pts(n: u32) -> impl Iterator<Item = [u32; 3]> {
-    (1..=n).flat_map(move |x| {
-        (x..=n).flat_map(move |y| {
-            (y..=n).filter_map(move |z| {
-                Some([x, y, z]).filter(|&[x, y, z]| x.pow(2) + y.pow(2) == z.pow(2))
+    (1..n + 1).flat_map(move |x| {
+        (x..n + 1).flat_map(move |y| {
+            (y..n + 1).filter_map(move |z| {
+                if x.pow(2) + y.pow(2) == z.pow(2) {
+                    Some([x, y, z])
+                } else {
+                    None
+                }
             })
         })
     })
@@ -25,33 +30,40 @@ pub fn pts(n: u32) -> impl Iterator<Item = [u32; 3]> {
 /// on the `Iterator` trait and applies `flap_map`
 /// recursively.
 macro_rules! comp {
-    ($e:expr; $x:pat in $xs:expr $(; $c:expr)?) => {{
-        $xs.filter_map(move |$x| Some($e)$(.filter(|_| $c))?)
+    ($e:expr, for $x:pat in $xs:expr $(, if $c:expr)?) => {{
+        $xs.filter_map(move |$x| if $($c &&)? true { Some($e) } else { None })
     }};
-    ($e:expr; $x:pat in $xs:expr $(, $y:pat in $ys:expr)+ $(; $c:expr)?) => {{
-        $xs.flat_map(move |$x| comp!($e; $($y in $ys),+ $(; $c)?))
+    ($e:expr, for $x:pat in $xs:expr $(, for $y:pat in $ys:expr)+ $(, if $c:expr)?) => {{
+        $xs.flat_map(move |$x| comp!($e, $(for $y in $ys),+ $(, if $c)?))
     }};
 }
 
 /// Rust also has a powerful syntax extension system, with `macro_rules!`
 /// it's possible to build a macro which treats the input much like typical
 /// list comprehension, and just expand it to iterator operations.
+#[inline]
 pub fn pts1(n: u32) -> impl Iterator<Item = [u32; 3]> {
     comp!(
-        [x, y, z];
-        x in 1..=n,
-        y in x..=n,
-        z in y..=n;
-        x.pow(2) + y.pow(2) == z.pow(2)
+        [x, y, z],
+        for x in 1..=n,
+        for y in x..=n,
+        for z in y..=n,
+        if x.pow(2) + y.pow(2) == z.pow(2)
     )
 }
+
+// The primary reason for the use of the keywords `for` and `if` is
+// to ensure there aren't multiple parsing options as `macro_rules!`
+// can't deal ambigiouty. It would be possible to use a combination of
+// other unambigious tokens like `,` and `;` but ones which could be
+// valid after an expression, like `|` and so on.
 
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
     fn checks() {
-        let it = pts(20);
+        let it = pts1(20);
 
         let v: Vec<_> = it.collect();
         let start = vec![
@@ -69,16 +81,26 @@ mod tests {
     }
     #[test]
     fn comp_test() {
-        let it = comp!(x + 1; x in 0..5);
+        let it = comp!(x + 1, for x in 0..5);
         assert_eq!(it.sum::<u32>(), (1..6).sum::<u32>());
 
-        let it = comp!(x + y; x in 0..5, y in 0..5);
+        let it = comp!(x + y, for x in 0..5, for y in 0..5);
         assert_eq!(it.sum::<u32>(), 100);
 
-        let it = comp!(x + 1; x in 0..5; x == 2);
+        let it = comp!(x + 1, for x in 0..5, if x == 2);
         assert_eq!(it.sum::<u32>(), 3);
 
-        let it = comp!(x + y; x in 0..5, y in 0..5; true);
+        let it = comp!(x + y, for x in 0..5, for y in 0..5, if true);
         assert_eq!(it.sum::<u32>(), 100);
+
+        let it = comp!(
+            x + y + z + w,
+            for x in 0..5,
+            for y in 0..5,
+            for z in 0..5,
+            for w in 0..5,
+            if x + y + z + w == 0
+        );
+        assert_eq!(it.sum::<u32>(), 0);
     }
 }
